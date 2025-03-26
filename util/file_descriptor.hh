@@ -13,7 +13,7 @@ class FileDescriptor
   class FDWrapper
   {
   public:
-    int fd_;                    // The file descriptor number returned by the kernel
+    int fd_;                    // The file descriptor number returned by the kernel 
     bool eof_ = false;          // Flag indicating whether FDWrapper::fd_ is at EOF
     bool closed_ = false;       // Flag indicating whether FDWrapper::fd_ has been closed
     bool non_blocking_ = false; // Flag indicating whether FDWrapper::fd_ is non-blocking
@@ -30,7 +30,7 @@ class FileDescriptor
     template<typename T>
     T CheckSystemCall( std::string_view s_attempt, T return_value ) const;
 
-    // An FDWrapper cannot be copied or moved
+    // An FDWrapper cannot be copied or moved，删除了FDWrapper类的拷贝构造函数，拷贝赋值运算符（包括常量和非常量两种）
     FDWrapper( const FDWrapper& other ) = delete;
     FDWrapper& operator=( const FDWrapper& other ) = delete;
     FDWrapper( FDWrapper&& other ) = delete;

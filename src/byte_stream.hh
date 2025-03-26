@@ -2,7 +2,9 @@
 
 #include <cstdint>
 #include <string>
-#include <string_view>
+#include <string_view>      //C++ 17标准引入的一个类，只读的轻量级的字符串视图，用于引用而非复制
+#include<queue>             //引入queue容器，来进行缓冲区buffer的定义
+using namespace std;
 
 class Reader;
 class Writer;
@@ -25,6 +27,12 @@ protected:
   // Please add any additional state to the ByteStream here, and not to the Writer and Reader interfaces.
   uint64_t capacity_;
   bool error_ {};
+  queue<string> buffer_ {};       //缓冲区buffer定义，队列即可
+  string_view buffer_view_ {};    //C++17结构，只读类
+  unsigned char flag {};          //结束标识符,用位运算来维护，0001是已经结束了输出，0000是还没结束输出
+  enum state { CLOSED , ERROR};   //枚举定义宏
+  uint64_t total_pushed_ = 0;     //总共已经写入的数据量
+  uint64_t total_poped_ = 0;      //总共已经弹出的数据量
 };
 
 class Writer : public ByteStream

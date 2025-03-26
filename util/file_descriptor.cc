@@ -10,7 +10,7 @@
 #include <unistd.h>
 
 using namespace std;
-
+//类模板写法
 template<typename T>
 T FileDescriptor::FDWrapper::CheckSystemCall( string_view s_attempt, T return_value ) const
 {
