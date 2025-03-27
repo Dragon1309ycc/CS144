@@ -1,19 +1,20 @@
 #pragma once
 
 #include "byte_stream.hh"
-
+#include <unordered_map>
 class Reassembler
 {
 public:
   // Construct Reassembler to write into given ByteStream.
-  explicit Reassembler( ByteStream&& output ) : output_( std::move( output ) ) {}
+  //防止隐式转换，接收右值引用的ByteStream类，初始化列表
+  explicit Reassembler( ByteStream&& output ) : output_( std::move( output ) ) {} 
 
   /*
    * Insert a new substring to be reassembled into a ByteStream.
-   *   `first_index`: the index of the first byte of the substring
-   *   `data`: the substring itself
-   *   `is_last_substring`: this substring represents the end of the stream
-   *   `output`: a mutable reference to the Writer
+   *   `first_index`: the index of the first byte of the substring     当前子字符串的首字节索引
+   *   `data`: the substring itself    当前收到的子字符串
+   *   `is_last_substring`: this substring represents the end of the stream    布尔值：当前子字符串是否是最后一块的子字符串
+   *   `output`: a mutable reference to the Writer     将正确排序的字节写入流中
    *
    * The Reassembler's job is to reassemble the indexed substrings (possibly out-of-order
    * and possibly overlapping) back into the original ByteStream. As soon as the Reassembler
@@ -43,4 +44,8 @@ public:
 
 private:
   ByteStream output_;
+  uint64_t last_index_ {};                                //记录最后一部分子字符串的首字节索引
+  unordered_map<uint64_t,string> Reassembler_buffer_ {} ; //用来存储不连续的子字符串
+  uint64_t R_buffer_size_ {};                             //用来记录在重组器缓存区中的字节数
 };
+ 

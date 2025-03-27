@@ -50,6 +50,7 @@ Writer& ByteStream::writer()
   return static_cast<Writer&>( *this ); // NOLINT(*-downcast)
 }
 
+//writer()返回一个常引用，实际上就是ByteStream自己的一部分
 const Writer& ByteStream::writer() const
 {
   static_assert( sizeof( Writer ) == sizeof( ByteStream ),
@@ -57,3 +58,6 @@ const Writer& ByteStream::writer() const
 
   return static_cast<const Writer&>( *this ); // NOLINT(*-downcast)
 }
+//static_assert 作用：确保 Writer 和 ByteStream 结构相同，不允许 Writer 有额外成员变量。
+//static_cast<const Writer&>(*this) 让 ByteStream 以 Writer 视角存在。
+//static_cast 不会改变对象的实际类型，只是告诉编译器用 Writer 视角看待 ByteStream。
