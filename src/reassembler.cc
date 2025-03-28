@@ -62,12 +62,17 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
   while(iter != Reassembler_buffer_.end() && iter->first <= end_index) {
     uint64_t next_start = iter->first;
     uint64_t next_end = next_start + iter->second.size();
-    if(next_start > end_index) break;
-    size_t overlap = end_index > next_start ? end_index - next_start : 0;
-    data += iter->second.substr(overlap);
-    end_index = next_end;
-    R_buffer_size_ -= iter->second.size();
-    iter = Reassembler_buffer_.erase(iter);
+    if(next_start > end_index) break; //现在只剩 next 与 当前子字符串有相连或者重叠
+    if(next_end <= end_index) {
+      R_buffer_size_ -= iter->second.size();
+      iter = Reassembler_buffer_.erase(iter);
+    }else { //也就是next_end > end_index
+      data += iter->second.substr(end_index - next_start);
+      end_index = next_end;
+      R_buffer_size_ -= iter->second.size();
+      iter = Reassembler_buffer_.erase(iter);
+    }
+    iter = Reassembler_buffer_.lower_bound(first_index);
   }
 
   Reassembler_buffer_[first_index] = data;
