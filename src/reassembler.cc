@@ -17,7 +17,6 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
   }
 
   uint64_t pushed = output_.writer().bytes_pushed();
-  uint64_t end_unassembled_index = pushed + output_.writer().available_capacity();
 
   if( first_index + data.size() <= pushed || data.empty() ) {
     return;
@@ -56,14 +55,13 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
     uint64_t prev_start = prev_iter->first;
     uint64_t prev_end = prev_iter->first + prev_iter->second.size();
     //如果前一个子串的末尾 超过 当前子串的首索引
-    if(prev_end >= first_index){
-      if(end_index > prev_end){ //非包含关系
+    if(prev_end >= first_index){ //重叠或者挨上了
+      if(end_index > prev_end){
         first_index = prev_start;
-        data = prev_iter->second + data.substr(end_index - prev_end);
+        data = prev_iter->second + data.substr(prev_end - first_index);
         R_buffer_size_ -= prev_iter->second.size();
         Reassembler_buffer_.erase(prev_iter); 
-      }
-      else{
+      } else{
         first_index = prev_start;
         data = prev_iter->second;
         R_buffer_size_ -= prev_iter->second.size();
@@ -71,20 +69,29 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
       } 
     }
   }
-  //向后合并
-  while(iter != Reassembler_buffer_.end() && iter->first <= end_index) { //条件：R_buffer中存在比当前index要大的index
+  
+  // 向后合并 - 修改为合并相邻或重叠的块
+  iter = Reassembler_buffer_.lower_bound(first_index);
+  while (iter != Reassembler_buffer_.end() && iter->first <= end_index) {
     uint64_t next_start = iter->first;
     uint64_t next_end = next_start + iter->second.size();
-    if(next_start > end_index) break; //没有重叠，下面的情况是有重叠，需要剪裁合并
-    if(iter->first + iter->second.size() <= end_index){
-      R_buffer_size_ -= iter->second.size();
-      iter = Reassembler_buffer_.erase(iter);
-    }
-    else{
-      data += iter->second.substr(end_index - next_start);
-      end_index = next_end;
-      R_buffer_size_ -= iter->second.size();
-      iter = Reassembler_buffer_.erase(iter);
+    
+    if (next_start <= end_index) { // 重叠或相邻
+      if (next_end <= end_index) {
+        R_buffer_size_ -= iter->second.size();
+        iter = Reassembler_buffer_.erase(iter);
+        } else {
+        if (next_start == end_index) { // 正好相邻
+          data += iter->second;
+        } else { // 重叠
+          data += iter->second.substr(end_index - next_start);
+        }
+        end_index = next_end;
+        R_buffer_size_ -= iter->second.size();
+        iter = Reassembler_buffer_.erase(iter);
+      }
+    } else {
+      ++iter;
     }
   }
 
@@ -92,21 +99,15 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
   Reassembler_buffer_[first_index] = data;
   R_buffer_size_ += data.size();
 
-  //超容量丢弃
-  if(first_index + data.size() > end_unassembled_index){
-    if(end_unassembled_index > first_index)
-    {
-      data = data.substr(0, end_unassembled_index - first_index);
-    }
-    else{
-      data = "";
-    }
-  }
   //写入操作
-  while(!Reassembler_buffer_.empty() && Reassembler_buffer_.begin()->first == output_.writer().bytes_pushed()) {
-    output_.writer().push(Reassembler_buffer_.begin()->second);                       //插入相邻的子字符串
-    R_buffer_size_ -=  Reassembler_buffer_.begin()->second.size();              //更新重组器缓存区的数据量
-    Reassembler_buffer_.erase(Reassembler_buffer_.begin());                     //更新重组器缓存区,删除刚刚插入的数据
+  while (!Reassembler_buffer_.empty()) {
+    auto iter_stream = Reassembler_buffer_.begin();
+    if (iter_stream->first != output_.writer().bytes_pushed()) {
+        break;
+    }
+    output_.writer().push(iter_stream->second);
+    R_buffer_size_ -= iter_stream->second.size();
+    Reassembler_buffer_.erase(iter_stream);
   }
 
   if(output_.writer().bytes_pushed() == last_index_) {
