@@ -44,11 +44,8 @@ public:
 
 private:
   ByteStream output_;
-  uint64_t last_index_ = INT_FAST64_MAX;                  //记录最后一部分子字符串的首字节索引
+  uint64_t last_index_ = UINT64_MAX;                  //记录最后一部分子字符串的首字节索引
   map<uint64_t,string> Reassembler_buffer_ {} ;           //用来存储不连续的子字符串
   uint64_t R_buffer_size_ {};                             //用来记录在重组器缓存区中的字节数
-  uint64_t first_unassembled_index {};                    //未重组的首字节索引
-  uint64_t end_unassembled_index {};                      //最大容许的字节索引范围（开区间
-  
 };
  
