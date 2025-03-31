@@ -35,10 +35,8 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
   if (first_index + data.size() > pushed + available) {
     data = data.substr(0, pushed + available - first_index);
   }
-
   uint64_t end_index = first_index + data.size();
   auto iter = Reassembler_buffer_.lower_bound(first_index);
-
   // 向前合并
   if(iter != Reassembler_buffer_.begin()){
     auto prev_iter = prev(iter);
@@ -49,15 +47,14 @@ void Reassembler::insert( uint64_t first_index, string data, bool is_last_substr
       if (overlap < data.size()) {
         data = prev_iter->second + data.substr(overlap);
       } else {
-        data = prev_iter->second; // 当前 data 完全被覆盖
+        data = prev_iter->second; // 当前data完全被覆盖
       }
       first_index = prev_start;
       R_buffer_size_ -= prev_iter->second.size();
       Reassembler_buffer_.erase(prev_iter);
     }
   }
-
-  // 向后合并
+  //向后合并
   iter = Reassembler_buffer_.lower_bound(first_index);
   while(iter != Reassembler_buffer_.end() && iter->first <= end_index) {
     uint64_t next_start = iter->first;
