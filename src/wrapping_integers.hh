@@ -8,13 +8,13 @@
  *    - wraps back to zero when it reaches 2^32 - 1.
  */
 
-class Wrap32
+class Wrap32 //
 {
 public:
   explicit Wrap32( uint32_t raw_value ) : raw_value_( raw_value ) {}
 
   /* Construct a Wrap32 given an absolute sequence number n and the zero point. */
-  static Wrap32 wrap( uint64_t n, Wrap32 zero_point );
+  static Wrap32 wrap( uint64_t n, Wrap32 zero_point ); //包装
 
   /*
    * The unwrap method returns an absolute sequence number that wraps to this Wrap32, given the zero point
@@ -23,11 +23,11 @@ public:
    * There are many possible absolute sequence numbers that all wrap to the same Wrap32.
    * The unwrap method should return the one that is closest to the checkpoint.
    */
-  uint64_t unwrap( Wrap32 zero_point, uint64_t checkpoint ) const;
+  uint64_t unwrap( Wrap32 zero_point, uint64_t checkpoint ) const; //解包
 
-  Wrap32 operator+( uint32_t n ) const { return Wrap32 { raw_value_ + n }; }
-  bool operator==( const Wrap32& other ) const { return raw_value_ == other.raw_value_; }
+  Wrap32 operator+( uint32_t n ) const { return Wrap32 { raw_value_ + n }; } //运算符重载，
+  bool operator==( const Wrap32& other ) const { return raw_value_ == other.raw_value_; } //运算符重载，判断Warp32是否相等
 
 protected:
-  uint32_t raw_value_ {};
+  uint32_t raw_value_ {}; //用来存储当前32位序列号
 };
