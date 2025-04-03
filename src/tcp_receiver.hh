@@ -27,4 +27,8 @@ public:
 
 private:
   Reassembler reassembler_;
+  optional<Wrap32> zero_point {}; //用来记录整个TCP流式传输的起点
+  bool receiveRST = false;        //用来记录复位标志
+  bool is_FIN = false;
+  bool is_SYN = false;
 };
