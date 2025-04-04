@@ -18,6 +18,7 @@ void TCPReceiver::receive( TCPSenderMessage message )   //SYN FIN seqno RST payl
 
     } else if(zero_point != nullopt) {
 
+        // 这里的逻辑需要参考unwrap函数的具体实现过程
         uint64_t first_index =
             message.seqno.unwrap(zero_point.value(), reassembler_.writer().bytes_pushed()) - 1;
 
