@@ -9,7 +9,7 @@ Wrap32 Wrap32::wrap( uint64_t n, Wrap32 zero_point ) //这里的zerp_point 代�
   return zero_point + static_cast<uint32_t>(n);
 }
 
-uint64_t Wrap32::unwrap( Wrap32 zero_point, uint64_t checkpoint ) const
+uint64_t Wrap32::unwrap( Wrap32 zero_point, uint64_t checkpoint ) const //解包出最接近这个检查点的Wrap32格式序列号
 {
   uint64_t num = checkpoint >> 32;
   uint32_t r2z_distance = this->raw_value_ - zero_point.raw_value_;
