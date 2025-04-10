@@ -31,22 +31,17 @@ void TCPSender::push( const TransmitFunction& transmit )
     msg.SYN = true;
     msg.seqno = isn_;
     msg.RST = reader().has_error();
+    
+    uint16_t pay_window_size = receive_window_size_ - 1;
+    uint16_t pay_window_left = min( static_cast<uint16_t>( TCPConfig::MAX_PAYLOAD_SIZE) , pay_window_size );
 
-    uint64_t window_left = receive_seqno_ + window_size > next_seqno_ ? receive_seqno_ + window_size - next_seqno_ : 0;
-    if(!window_left) return;
-    window_left = min( TCPConfig::MAX_PAYLOAD_SIZE , static_cast<size_t>( window_left ));
-
-    if( reader().bytes_buffered() && receive_seqno_ + window_size > next_seqno_ ) {
-
-      read( reader() , window_left , msg.payload );
-
+    if( reader().bytes_buffered() && pay_window_left > 0 ) {
+      read( reader() , pay_window_size , msg.payload );
     }
 
-    if( reader().is_finished() && receive_seqno_ + window_size > next_seqno_ ) {
-
+    if( reader().is_finished() && msg.payload.size() + 1 < receive_window_size_ ) {
       msg.FIN = true;
       send_FIN = true;
-
     }
 
     transmit(msg);
@@ -136,6 +131,8 @@ void TCPSender::receive( const TCPReceiverMessage& msg )
     reader().set_error();
     return;
   }
+  //即是没有确认号，也要接收窗口大小，这是SYN+FIN用例疏漏的细节，否则默认为1，无法发送FIN
+  receive_window_size_ = msg.window_size;
   //未收到确认号
   if(!msg.ackno.has_value()) return;
 
@@ -148,9 +145,8 @@ void TCPSender::receive( const TCPReceiverMessage& msg )
   }
 
   if(abs_seqno >= receive_seqno_) {
-    //更新ack 和 window
+    //更新ack
     receive_seqno_ = abs_seqno;
-    receive_window_size_ = msg.window_size;
   }
 
   while (!wait_ack_msg.empty()) {
